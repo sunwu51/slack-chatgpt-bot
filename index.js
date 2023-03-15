@@ -45,7 +45,7 @@ app.use('/slack', async (req, res) => {
             headers:{"Content-Type":"application/json"},
             data: {
                messages,
-               "tokensLength":1282,
+               "tokensLength":3282,
                "model":"gpt-3.5-turbo"
             }
         })
