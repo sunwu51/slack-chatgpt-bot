@@ -4,8 +4,8 @@ var app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-var chatUrl = `https://chat.51buygpt.com/message.php`
-var slackUrl = `https://api.openai.com/v1/chat/completions`
+var chatUrl = `https://api.openai.com/v1/chat/completions`
+var slackUrl = `https://slack.com/api/chat.postMessage`
 var token = process.env.TOKEN
 var apiKey = process.env.API_KEY
 
@@ -34,13 +34,14 @@ var apiKey = process.env.API_KEY
   },
  */
 app.use('/slack', async (req, res) => {
+    var start = new Date().getTime()
     if (req.body.challenge) {
         res.json({challenge : req.body.challenge})
         return
     }
     let { event } = req.body;
     let content = event.text.substring(event.text.indexOf(' ') + 1)
-
+    console.log({content})
     if (event.text && event.text.length > 0) {
         let {data} = await axios({
             url: chatUrl,
@@ -53,11 +54,15 @@ app.use('/slack', async (req, res) => {
                 ]
             }
         })
-        let gptRes = data.choices[0].message;
+        var end = new Date().getTime()
+        console.log(`gpt time: ${end - start}ms`)
+        start = end;
+        let gptRes = data.choices[0].message.content;
 
         console.log(`
             from ${event.user}: ${content}
             gpt: ${gptRes}
+            usage: ${data.usage.total_tokens} tokens
         `);
 
         await axios({
@@ -69,6 +74,8 @@ app.use('/slack', async (req, res) => {
                 "text": gptRes, 
             }
         })
+        var end = new Date().getTime()
+        console.log(`send slack time: ${end - start}ms`)
         
 
         res.json({challenge : "" });
