@@ -9,7 +9,9 @@ var chatUrl = `https://api.okchatgpt.net/api/litemsg`
 var slackUrl = `https://slack.com/api/chat.postMessage`
 var token = process.env.TOKEN
 var apiKey = process.env.API_KEY
+var s = new Set()
 
+setInterval(()=>s.clear(), 1000 * 60 * 100)
 
 app.use('/slack', async (req, res) => {
     var start = new Date().getTime()
@@ -17,8 +19,16 @@ app.use('/slack', async (req, res) => {
         res.json({challenge : req.body.challenge})
         return
     }
+
     console.log(req.body)
     let { event } = req.body;
+    let id = event.client_msg_id
+    if (s.has(id)) {
+        res.json({challenge : "" });
+        return;
+    } else {
+        s.add(id)
+    }
     let content = event.text.substring(event.text.indexOf(' ') + 1)
     console.log({content})
     if (event.text && event.text.length > 0) {
