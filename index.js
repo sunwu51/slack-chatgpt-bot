@@ -5,11 +5,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // var chatUrl = `https://api.openai.com/v1/chat/completions`
-var chatUrl = `https://api.okchatgpt.net/api/litemsg`
+var chatUrl = `https://api.forchange.cn/`
 var slackUrl = `https://slack.com/api/chat.postMessage`
 var token = process.env.TOKEN
 var apiKey = process.env.API_KEY
 var s = new Set()
+var ctx = []
 
 setInterval(()=>s.clear(), 1000 * 60 * 100)
 
@@ -20,7 +21,7 @@ app.use('/slack', async (req, res) => {
         return
     }
 
-    console.log(req.body)
+    // console.log(req.body)
     let { event } = req.body;
     let id = event.client_msg_id
     if (s.has(id)) {
@@ -32,19 +33,36 @@ app.use('/slack', async (req, res) => {
     let content = event.text.substring(event.text.indexOf(' ') + 1)
     console.log({content})
     if (event.text && event.text.length > 0) {
+        var messages = [
+            {role:"system","content":"请以markdown的形式返回答案"},
+            ...ctx,
+            {role:'user', content}
+           ]
+        console.log({messages})
         let {data} = await axios({
             url: chatUrl,
             method:"POST",
             headers:{"Content-Type":"application/json"},
             data: {
-               content
+               messages,
+               "tokensLength":1282,
+               "model":"gpt-3.5-turbo"
             }
         })
-        var end = new Date().getTime()
         console.log(`gpt time: ${end - start}ms`)
+        let gptRes = data.choices[0].message.content;
+
+        ctx.push({role:'user', content});
+        ctx.push({role:'assistant', content: gptRes});
+    
+        if (ctx.length > 20) {
+            ctx.shift();
+            ctx.shift();
+        }
+        
+        var end = new Date().getTime()
         start = end;
-        // let gptRes = data.choices[0].message.content;
-        let gptRes = data.message;
+        // let gptRes = data.message;
         console.log(`
             from ${event.user}: ${content}
             gpt: ${gptRes}
@@ -63,7 +81,7 @@ app.use('/slack', async (req, res) => {
         console.log(`send slack time: ${end - start}ms`)
         
 
-        res.json({challenge : "" });
+        res.json(data);
     } 
 
 
