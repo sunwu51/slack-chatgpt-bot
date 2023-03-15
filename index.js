@@ -17,6 +17,7 @@ app.use('/slack', async (req, res) => {
         res.json({challenge : req.body.challenge})
         return
     }
+    console.log(req.body)
     let { event } = req.body;
     let content = event.text.substring(event.text.indexOf(' ') + 1)
     console.log({content})
