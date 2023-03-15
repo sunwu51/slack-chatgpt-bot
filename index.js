@@ -5,8 +5,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 var chatUrl = `https://chat.51buygpt.com/message.php`
-var slackUrl = `https://slack.com/api/chat.postMessage`
+var slackUrl = `https://api.openai.com/v1/chat/completions`
 var token = process.env.TOKEN
+var apiKey = process.env.API_KEY
 
 /**?channel=chat&text=%3C%40U043Q996345%3E%20hello%E8%BF%99%E4%B8%AA%E4%B8%9C%E8%A5%BF%E6%98%AF%E8%BF%99%E6%A0%B7%E6%BB%B4%60%60%60%5Cnprint(123)%5Cn%60%60%60over&pretty=1
  * body: {
@@ -44,10 +45,15 @@ app.use('/slack', async (req, res) => {
         let {data} = await axios({
             url: chatUrl,
             method:"POST",
-            headers:{"Content-Type":"application/x-www-form-urlencoded"},
-            data:`context=[]&message=${content}`
+            headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
+            data: {
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "user", "content": content}
+                ]
+            }
         })
-        let gptRes = data.message;
+        let gptRes = data.choices[0].message;
 
         console.log(`
             from ${event.user}: ${content}
