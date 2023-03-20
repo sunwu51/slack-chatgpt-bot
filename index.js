@@ -4,8 +4,8 @@ var app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// var chatUrl = `https://api.openai.com/v1/chat/completions`
-var chatUrl = `https://api.forchange.cn/`
+var chatUrl = `https://api.openai.com/v1/chat/completions`
+// var chatUrl = `https://api.forchange.cn/`
 var slackUrl = `https://slack.com/api/chat.postMessage`
 var token = process.env.TOKEN
 var apiKey = process.env.API_KEY
@@ -42,10 +42,10 @@ app.use('/slack', async (req, res) => {
         let {data} = await axios({
             url: chatUrl,
             method:"POST",
-            headers:{"Content-Type":"application/json"},
+            headers:{"Content-Type":"application/json", "Authorization":"Bearer " + apiKey},
             data: {
                messages,
-               "tokensLength":3282,
+//                "tokensLength":3282,
                "model":"gpt-3.5-turbo"
             }
         })
